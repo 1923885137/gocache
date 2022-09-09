@@ -87,8 +87,15 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view, err := group.Get(key)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	// Write the value to the response body as a proto message.
 	body, err := proto.Marshal(&pd.Response{Value: view.ByteSlice()})
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -115,7 +122,7 @@ func (h *httpGetter) Get(in *pd.Request, out *pd.Response) error {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned:%v", res.Status)
+		return fmt.Errorf("server returned:%v", res.Status)
 	}
 	bytes, err := ioutil.ReadAll(res.Body)
 
